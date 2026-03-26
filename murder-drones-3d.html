@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Murder Drones 3D</title>
+  <style>
+    :root {
+      --bg: #060a0f;
+      --panel: rgba(10, 17, 26, 0.88);
+      --line: #284258;
+      --text: #e9f2ff;
+      --muted: #9fb7cb;
+      --accent: #ffd34d;
+      --danger: #ff6f6f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow-x: hidden;
+      font-family: Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(255, 211, 77, 0.12), transparent 28%),
+        linear-gradient(180deg, #0b121a 0%, #05080c 100%);
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      top: -8rem;
+      left: -7rem;
+      width: 30rem;
+      height: 30rem;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 211, 77, 0.2), rgba(255, 111, 111, 0.06) 50%, transparent 72%);
+      filter: blur(20px);
+      animation: murderGlow 20s ease-in-out infinite;
+    }
+
+    body::after {
+      inset: 0;
+      background:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.7), transparent 84%);
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(1100px, calc(100vw - 18px));
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+    }
+
+    @keyframes murderGlow {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      50% { transform: translate3d(2rem, 1rem, 0) scale(1.08); }
+      100% { transform: translate3d(-1rem, 2rem, 0) scale(0.94); }
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, rgba(255, 211, 77, 0.08), rgba(255, 111, 111, 0.08));
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      min-width: 90px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      background: rgba(5, 10, 15, 0.72);
+      text-align: center;
+      font-size: 0.94rem;
+    }
+
+    .arena {
+      position: relative;
+      padding: 14px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--line);
+      background: #0b1218;
+      image-rendering: crisp-edges;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 14px;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .panel {
+      width: min(540px, calc(100% - 32px));
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: rgba(4, 7, 12, 0.9);
+      text-align: center;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .panel p {
+      margin: 8px 0;
+      color: var(--muted);
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+      font-size: 0.92rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 18px 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      background: rgba(5, 10, 15, 0.72);
+      padding: 5px;
+    }
+
+    @media (max-width: 820px) {
+      .topbar,
+      .footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <h1 class="title">Murder Drones 3D: Copper 9</h1>
+        <p class="subtitle">First-person survival with your rendered character assets.</p>
+      </div>
+      <div class="hud">
+        <div class="chip">HP: <span id="hp">100</span></div>
+        <div class="chip">Score: <span id="score">0</span></div>
+        <div class="chip">Wave: <span id="wave">1</span></div>
+        <div class="chip">Kills: <span id="kills">0</span></div>
+      </div>
+    </header>
+
+    <section class="arena">
+      <canvas id="game" width="980" height="600"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="panel" id="panel">
+          <h2>Copper 9 Deployment</h2>
+          <p>You are Uzi in a 3D bunker maze. Hunt the incoming drones before they reach you.</p>
+          <div class="legend">
+            <div><strong>Move:</strong> WASD</div>
+            <div><strong>Turn:</strong> Left / Right</div>
+            <div><strong>Shoot:</strong> Space</div>
+            <div><strong>Restart:</strong> R</div>
+          </div>
+          <p>Click the game to start.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      <div>Tip: backpedal in hallways and funnel drones into your crosshair.</div>
+      <div>
+        <img src="Toxilisk_MurderDrones_Models_1.2.1/Textures/WD_Symbol.png" alt="WD symbol">
+        <img src="Toxilisk_MurderDrones_Models_1.2.1/Textures/DD_Symbol.png" alt="DD symbol">
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const hpEl = document.getElementById("hp");
+    const scoreEl = document.getElementById("score");
+    const waveEl = document.getElementById("wave");
+    const killsEl = document.getElementById("kills");
+    const overlay = document.getElementById("overlay");
+    const panel = document.getElementById("panel");
+
+    const textures = {};
+    for (const [key, src] of Object.entries({
+      uzi: "murder-drones-assets/uzi.png",
+      n: "murder-drones-assets/n.png",
+      j: "murder-drones-assets/j.png",
+      v: "murder-drones-assets/v.png",
+      wd: "Toxilisk_MurderDrones_Models_1.2.1/Textures/WD_Symbol.png",
+      dd: "Toxilisk_MurderDrones_Models_1.2.1/Textures/DD_Symbol.png"
+    })) {
+      const img = new Image();
+      img.src = src;
+      textures[key] = img;
+    }
+
+    const map = [
+      "1111111111111111",
+      "1000000000100001",
+      "1011110110101101",
+      "1010000100000101",
+      "1010111111110101",
+      "1010001000010101",
+      "1011101011010101",
+      "1000101001000001",
+      "1011101011111101",
+      "1000001000000001",
+      "1011111110111101",
+      "1000000000000001",
+      "1111111111111111"
+    ];
+
+    const state = {
+      running: false,
+      gameOver: false,
+      score: 0,
+      kills: 0,
+      wave: 1,
+      nextWaveAt: 18,
+      spawnTimer: 0,
+      time: 0,
+      keys: new Set(),
+      enemies: [],
+      shots: [],
+      damageFlash: 0
+    };
+
+    const player = {
+      x: 2.5,
+      y: 2.5,
+      angle: 0.2,
+      hp: 100,
+      moveSpeed: 2.8,
+      rotSpeed: 2.2,
+      shootCooldown: 0
+    };
+
+    const enemyTypes = [
+      { sprite: "n", name: "N", speed: 1.4, hp: 1, damage: 12 },
+      { sprite: "j", name: "J", speed: 1.7, hp: 2, damage: 17 },
+      { sprite: "v", name: "V", speed: 1.9, hp: 1, damage: 14 }
+    ];
+
+    function resetGame() {
+      state.running = false;
+      state.gameOver = false;
+      state.score = 0;
+      state.kills = 0;
+      state.wave = 1;
+      state.nextWaveAt = 18;
+      state.spawnTimer = 0;
+      state.time = 0;
+      state.enemies = [];
+      state.shots = [];
+      state.damageFlash = 0;
+
+      player.x = 2.5;
+      player.y = 2.5;
+      player.angle = 0.2;
+      player.hp = 100;
+      player.shootCooldown = 0;
+
+      hpEl.textContent = player.hp;
+      scoreEl.textContent = state.score;
+      waveEl.textContent = state.wave;
+      killsEl.textContent = state.kills;
+
+      overlay.classList.remove("hidden");
+      panel.innerHTML = `
+        <h2>Copper 9 Deployment</h2>
+        <p>You are Uzi in a 3D bunker maze. Hunt the incoming drones before they reach you.</p>
+        <div class="legend">
+          <div><strong>Move:</strong> WASD</div>
+          <div><strong>Turn:</strong> Left / Right</div>
+          <div><strong>Shoot:</strong> Space</div>
+          <div><strong>Restart:</strong> R</div>
+        </div>
+        <p>Click the game to start.</p>
+      `;
+    }
+
+    function startGame() {
+      if (state.gameOver) resetGame();
+      state.running = true;
+      overlay.classList.add("hidden");
+    }
+
+    function wallAt(x, y) {
+      const mx = Math.floor(x);
+      const my = Math.floor(y);
+      if (my < 0 || my >= map.length || mx < 0 || mx >= map[0].length) return "1";
+      return map[my][mx];
+    }
+
+    function isOpen(x, y) {
+      return wallAt(x, y) === "0";
+    }
+
+    function movePlayer(dt) {
+      let move = 0;
+      if (state.keys.has("w")) move += 1;
+      if (state.keys.has("s")) move -= 1;
+      if (state.keys.has("arrowleft")) player.angle -= player.rotSpeed * dt;
+      if (state.keys.has("arrowright")) player.angle += player.rotSpeed * dt;
+      if (state.keys.has("a")) player.angle -= player.rotSpeed * dt * 0.75;
+      if (state.keys.has("d")) player.angle += player.rotSpeed * dt * 0.75;
+
+      const step = move * player.moveSpeed * dt;
+      const nx = player.x + Math.cos(player.angle) * step;
+      const ny = player.y + Math.sin(player.angle) * step;
+
+      if (isOpen(nx, player.y)) player.x = nx;
+      if (isOpen(player.x, ny)) player.y = ny;
+    }
+
+    function spawnEnemy() {
+      const spawns = [
+        { x: 13.5, y: 10.5 },
+        { x: 13.5, y: 2.5 },
+        { x: 8.5, y: 11.5 },
+        { x: 2.5, y: 10.5 }
+      ].filter((s) => Math.hypot(s.x - player.x, s.y - player.y) > 4);
+
+      const spawn = spawns[Math.floor(Math.random() * spawns.length)];
+      const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+      state.enemies.push({
+        x: spawn.x,
+        y: spawn.y,
+        type,
+        hp: type.hp + Math.floor(state.wave / 3),
+        hitFlash: 0
+      });
+    }
+
+    function shoot() {
+      if (!state.running || state.gameOver || player.shootCooldown > 0) return;
+      player.shootCooldown = 0.35;
+      let best = null;
+      for (const enemy of state.enemies) {
+        const dx = enemy.x - player.x;
+        const dy = enemy.y - player.y;
+        const dist = Math.hypot(dx, dy);
+        const ang = Math.atan2(dy, dx);
+        let delta = ang - player.angle;
+        while (delta < -Math.PI) delta += Math.PI * 2;
+        while (delta > Math.PI) delta -= Math.PI * 2;
+        if (Math.abs(delta) < 0.12 && dist < 8 && hasLineOfSight(player.x, player.y, enemy.x, enemy.y)) {
+          if (!best || dist < best.dist) best = { enemy, dist };
+        }
+      }
+      if (best) {
+        best.enemy.hp -= 1;
+        best.enemy.hitFlash = 0.18;
+        if (best.enemy.hp <= 0) {
+          state.enemies.splice(state.enemies.indexOf(best.enemy), 1);
+          state.score += 25 + state.wave * 4;
+          state.kills += 1;
+          scoreEl.textContent = state.score;
+          killsEl.textContent = state.kills;
+        }
+      }
+      state.shots.push({ life: 0.08 });
+    }
+
+    function hasLineOfSight(x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const dist = Math.hypot(dx, dy);
+      const steps = Math.ceil(dist * 12);
+      for (let i = 1; i < steps; i += 1) {
+        const t = i / steps;
+        if (!isOpen(x1 + dx * t, y1 + dy * t)) return false;
+      }
+      return true;
+    }
+
+    function hurtPlayer(amount) {
+      player.hp = Math.max(0, player.hp - amount);
+      state.damageFlash = 0.25;
+      hpEl.textContent = Math.round(player.hp);
+      if (player.hp <= 0) {
+        state.running = false;
+        state.gameOver = true;
+        overlay.classList.remove("hidden");
+        panel.innerHTML = `
+          <h2>System Failure</h2>
+          <p>You went down on wave <strong>${state.wave}</strong>.</p>
+          <p>Final score: <strong>${state.score}</strong> | Kills: <strong>${state.kills}</strong></p>
+          <p>Press <strong>R</strong> or click to redeploy.</p>
+        `;
+      }
+    }
+
+    function updateEnemies(dt) {
+      for (const enemy of state.enemies) {
+        enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
+        const dx = player.x - enemy.x;
+        const dy = player.y - enemy.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0.7 && hasLineOfSight(enemy.x, enemy.y, player.x, player.y)) {
+          const step = enemy.type.speed * dt;
+          const nx = enemy.x + (dx / dist) * step;
+          const ny = enemy.y + (dy / dist) * step;
+          if (isOpen(nx, enemy.y)) enemy.x = nx;
+          if (isOpen(enemy.x, ny)) enemy.y = ny;
+        }
+        if (dist < 0.9) {
+          hurtPlayer(enemy.type.damage * dt * 1.8);
+        }
+      }
+    }
+
+    function update(dt) {
+      if (!state.running || state.gameOver) return;
+      state.time += dt;
+      state.damageFlash = Math.max(0, state.damageFlash - dt);
+      player.shootCooldown = Math.max(0, player.shootCooldown - dt);
+      state.shots = state.shots.filter((s) => (s.life -= dt) > 0);
+
+      movePlayer(dt);
+      updateEnemies(dt);
+
+      if (state.time >= state.nextWaveAt) {
+        state.wave += 1;
+        state.nextWaveAt += Math.max(10, 18 - state.wave);
+        waveEl.textContent = state.wave;
+      }
+
+      state.spawnTimer -= dt;
+      if (state.spawnTimer <= 0) {
+        spawnEnemy();
+        if (state.wave > 2 && Math.random() < 0.4) spawnEnemy();
+        state.spawnTimer = Math.max(0.5, 2.1 - state.wave * 0.12);
+      }
+    }
+
+    function castRay(angle) {
+      const sin = Math.sin(angle);
+      const cos = Math.cos(angle);
+      let depth = 0;
+      while (depth < 20) {
+        depth += 0.02;
+        const x = player.x + cos * depth;
+        const y = player.y + sin * depth;
+        if (!isOpen(x, y)) return { depth, cell: wallAt(x, y), x, y };
+      }
+      return { depth: 20, cell: "1", x: player.x + cos * 20, y: player.y + sin * 20 };
+    }
+
+    function drawWorld() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const horizon = h * 0.48;
+
+      const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+      sky.addColorStop(0, "#1b2a36");
+      sky.addColorStop(1, "#273847");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, w, horizon);
+
+      const ground = ctx.createLinearGradient(0, horizon, 0, h);
+      ground.addColorStop(0, "#182129");
+      ground.addColorStop(1, "#090d11");
+      ctx.fillStyle = ground;
+      ctx.fillRect(0, horizon, w, h - horizon);
+
+      const fov = Math.PI / 3;
+      const zBuffer = new Array(w);
+
+      for (let x = 0; x < w; x += 1) {
+        const cameraX = (x / w) * 2 - 1;
+        const angle = player.angle + cameraX * (fov / 2);
+        const ray = castRay(angle);
+        const corrected = ray.depth * Math.cos(angle - player.angle);
+        zBuffer[x] = corrected;
+        const wallH = Math.min(h, h / Math.max(corrected, 0.0001));
+        const start = Math.floor((h - wallH) / 2);
+        const shade = Math.max(35, 190 - corrected * 18);
+        ctx.fillStyle = `rgb(${shade}, ${Math.floor(shade * 0.88)}, ${Math.floor(shade * 0.72)})`;
+        ctx.fillRect(x, start, 1, wallH);
+      }
+
+      drawSprites(zBuffer, fov);
+      drawGun();
+      drawCrosshair();
+      drawMinimap();
+
+      if (state.damageFlash > 0) {
+        ctx.fillStyle = `rgba(255, 80, 80, ${state.damageFlash * 0.35})`;
+        ctx.fillRect(0, 0, w, h);
+      }
+    }
+
+    function drawSprites(zBuffer, fov) {
+      const list = state.enemies.map((enemy) => {
+        const dx = enemy.x - player.x;
+        const dy = enemy.y - player.y;
+        const dist = Math.hypot(dx, dy);
+        let angle = Math.atan2(dy, dx) - player.angle;
+        while (angle < -Math.PI) angle += Math.PI * 2;
+        while (angle > Math.PI) angle -= Math.PI * 2;
+        return { enemy, dist, angle };
+      }).filter((item) => Math.abs(item.angle) < fov * 0.7 && item.dist > 0.2)
+        .sort((a, b) => b.dist - a.dist);
+
+      for (const item of list) {
+        const sprite = textures[item.enemy.type.sprite];
+        const size = Math.min(canvas.height * 1.3, canvas.height / item.dist);
+        const screenX = canvas.width / 2 + (item.angle / (fov / 2)) * (canvas.width / 2);
+        const screenY = canvas.height / 2 + canvas.height / (item.dist * 8);
+        const drawX = screenX - size / 2;
+        const drawY = screenY - size / 2;
+        const col = Math.floor(screenX);
+        if (col >= 0 && col < zBuffer.length && item.dist < zBuffer[col] + 0.2) {
+          if (sprite.complete && sprite.naturalWidth > 0) {
+            ctx.save();
+            if (item.enemy.hitFlash > 0) ctx.globalAlpha = 0.65;
+            ctx.drawImage(sprite, drawX, drawY, size, size);
+            ctx.restore();
+          } else {
+            ctx.fillStyle = "#ff6f6f";
+            ctx.fillRect(drawX, drawY, size * 0.7, size);
+          }
+
+          ctx.fillStyle = "rgba(255,255,255,0.85)";
+          ctx.font = "12px Verdana";
+          ctx.textAlign = "center";
+          ctx.fillText(item.enemy.type.name, screenX, drawY - 8);
+        }
+      }
+    }
+
+    function drawGun() {
+      const img = textures.uzi;
+      const bob = state.running ? Math.sin(state.time * 6) * 6 : 0;
+      const shotKick = state.shots.length ? 12 : 0;
+      const x = canvas.width / 2 - 100;
+      const y = canvas.height - 220 + bob + shotKick;
+      if (img.complete && img.naturalWidth > 0) {
+        ctx.drawImage(img, x, y, 200, 200);
+      } else {
+        ctx.fillStyle = "#dce4ef";
+        ctx.fillRect(x + 80, y + 40, 120, 120);
+      }
+    }
+
+    function drawCrosshair() {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      ctx.strokeStyle = state.shots.length ? "#ffd34d" : "rgba(255,255,255,0.75)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - 10, cy);
+      ctx.lineTo(cx + 10, cy);
+      ctx.moveTo(cx, cy - 10);
+      ctx.lineTo(cx, cy + 10);
+      ctx.stroke();
+    }
+
+    function drawMinimap() {
+      const scale = 10;
+      const ox = 14;
+      const oy = 14;
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      for (let y = 0; y < map.length; y += 1) {
+        for (let x = 0; x < map[y].length; x += 1) {
+          ctx.fillStyle = map[y][x] === "1" ? "#304552" : "#0d141b";
+          ctx.fillRect(ox + x * scale, oy + y * scale, scale - 1, scale - 1);
+        }
+      }
+      for (const enemy of state.enemies) {
+        ctx.fillStyle = "#ff6f6f";
+        ctx.fillRect(ox + enemy.x * scale - 2, oy + enemy.y * scale - 2, 4, 4);
+      }
+      ctx.fillStyle = "#ffd34d";
+      ctx.beginPath();
+      ctx.arc(ox + player.x * scale, oy + player.y * scale, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffd34d";
+      ctx.beginPath();
+      ctx.moveTo(ox + player.x * scale, oy + player.y * scale);
+      ctx.lineTo(
+        ox + player.x * scale + Math.cos(player.angle) * 8,
+        oy + player.y * scale + Math.sin(player.angle) * 8
+      );
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawWorld();
+      if (!state.running && !state.gameOver) {
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        ctx.font = "18px Verdana";
+        ctx.textAlign = "center";
+        ctx.fillText("Click to deploy", canvas.width / 2, canvas.height - 28);
+      }
+    }
+
+    let last = performance.now();
+    function frame(now) {
+      const dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(frame);
+    }
+
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      state.keys.add(key);
+      if (key === " ") {
+        event.preventDefault();
+        shoot();
+      }
+      if (key === "r") {
+        resetGame();
+        startGame();
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      state.keys.delete(event.key.toLowerCase());
+    });
+
+    canvas.addEventListener("mousedown", () => {
+      if (!state.running) startGame();
+      else shoot();
+    });
+
+    resetGame();
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

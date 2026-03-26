@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Murder Drones: Copper 9 Survival</title>
+  <style>
+    :root {
+      --bg: #070b10;
+      --panel: rgba(15, 23, 33, 0.86);
+      --line: #2a4358;
+      --text: #edf4ff;
+      --muted: #9db7cc;
+      --accent: #ffd34d;
+      --danger: #ff6b6b;
+      --good: #7ef7b8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "Trebuchet MS", Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 15%, rgba(255, 211, 77, 0.18), transparent 20%),
+        radial-gradient(circle at 80% 0%, rgba(126, 247, 184, 0.08), transparent 24%),
+        linear-gradient(180deg, #0b1118 0%, #05080c 100%);
+      overflow: hidden;
+    }
+
+    .shell {
+      width: min(960px, calc(100vw - 24px));
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, rgba(255, 211, 77, 0.1), rgba(255, 107, 107, 0.08));
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .brand-icons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .brand-icons img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      background: rgba(9, 15, 22, 0.72);
+      padding: 5px;
+    }
+
+    .hud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      font-size: 0.95rem;
+    }
+
+    .chip {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      background: rgba(9, 15, 22, 0.72);
+      min-width: 96px;
+      text-align: center;
+    }
+
+    .arena-wrap {
+      position: relative;
+      padding: 14px;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(13, 22, 30, 0.94), rgba(6, 11, 16, 0.98));
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 14px;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .panel {
+      width: min(520px, calc(100% - 32px));
+      padding: 24px;
+      background: rgba(6, 10, 16, 0.9);
+      border: 1px solid var(--line);
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .panel p {
+      margin: 8px 0;
+      color: var(--muted);
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+      font-size: 0.92rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      padding: 0 18px 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer strong {
+      color: var(--good);
+    }
+
+    .dossiers {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .dossiers img {
+      width: 48px;
+      height: 72px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      background: rgba(9, 15, 22, 0.72);
+    }
+
+    @media (max-width: 820px) {
+      .topbar,
+      .footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icons">
+          <img src="Toxilisk_MurderDrones_Models_1.2.1/Textures/WD_Symbol.png" alt="Worker Drone symbol">
+          <img src="Toxilisk_MurderDrones_Models_1.2.1/Textures/DD_Symbol.png" alt="Disassembly Drone symbol">
+        </div>
+        <div>
+          <h1 class="title">Murder Drones: Copper 9 Survival</h1>
+          <p class="subtitle">Fan-made browser game using textures from your Downloads model pack.</p>
+        </div>
+      </div>
+      <div class="hud">
+        <div class="chip">HP: <span id="hp">100</span></div>
+        <div class="chip">Score: <span id="score">0</span></div>
+        <div class="chip">Wave: <span id="wave">1</span></div>
+        <div class="chip">Scrap: <span id="scrap">0</span></div>
+      </div>
+    </header>
+
+    <section class="arena-wrap">
+      <canvas id="game" width="900" height="560" aria-label="Murder Drones fan game"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="panel" id="panel">
+          <h2>Copper 9 Survival</h2>
+          <p>You are Uzi defending the bunker from incoming disassembly drones.</p>
+          <p>Clear waves, dodge attacks, and grab scrap to keep your score climbing.</p>
+          <div class="legend">
+            <div><strong>Move:</strong> WASD or Arrow Keys</div>
+            <div><strong>Aim:</strong> Mouse</div>
+            <div><strong>Shoot:</strong> Left Click</div>
+            <div><strong>Restart:</strong> R</div>
+          </div>
+          <p>Click anywhere in the arena to start.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      <div>Tip: <strong>Yellow scrap</strong> heals a little. Survive long enough and the waves speed up.</div>
+      <div class="dossiers">
+        <img src="Toxilisk_MurderDrones_Models_1.2.1/Textures/ID_Nori.png" alt="Nori ID card">
+        <img src="Toxilisk_MurderDrones_Models_1.2.1/Textures/ID_Yeva.png" alt="Yeva ID card">
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const hpEl = document.getElementById("hp");
+    const scoreEl = document.getElementById("score");
+    const waveEl = document.getElementById("wave");
+    const scrapEl = document.getElementById("scrap");
+    const overlay = document.getElementById("overlay");
+    const panel = document.getElementById("panel");
+
+    const texturePaths = {
+      wdSymbol: "Toxilisk_MurderDrones_Models_1.2.1/Textures/WD_Symbol.png",
+      ddSymbol: "Toxilisk_MurderDrones_Models_1.2.1/Textures/DD_Symbol.png",
+      nori: "Toxilisk_MurderDrones_Models_1.2.1/Textures/ID_Nori.png",
+      yeva: "Toxilisk_MurderDrones_Models_1.2.1/Textures/ID_Yeva.png",
+      uziJacket: "Toxilisk_MurderDrones_Models_1.2.1/Textures/Uzi_Jacket_tex.png",
+      armbandN: "Toxilisk_MurderDrones_Models_1.2.1/Textures/Armband_N.png",
+      armbandJ: "Toxilisk_MurderDrones_Models_1.2.1/Textures/Armband_J.png",
+      armbandV: "Toxilisk_MurderDrones_Models_1.2.1/Textures/Armband_V.png",
+      uziSprite: "murder-drones-assets/uzi.png",
+      nSprite: "murder-drones-assets/n.png",
+      jSprite: "murder-drones-assets/j.png",
+      vSprite: "murder-drones-assets/v.png"
+    };
+
+    const textures = Object.fromEntries(
+      Object.entries(texturePaths).map(([key, src]) => {
+        const image = new Image();
+        image.src = src;
+        return [key, image];
+      })
+    );
+
+    const world = {
+      running: false,
+      gameOver: false,
+      time: 0,
+      wave: 1,
+      nextWaveAt: 18,
+      spawnTimer: 0,
+      score: 0,
+      scrap: 0,
+      mouse: { x: canvas.width / 2, y: canvas.height / 2, down: false },
+      keys: new Set(),
+      particles: [],
+      bullets: [],
+      enemies: [],
+      pickups: []
+    };
+
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      r: 18,
+      speed: 240,
+      hp: 100,
+      shootCooldown: 0,
+      facing: 0,
+      flash: 0
+    };
+
+    const enemySprites = [
+      { key: "nSprite", name: "N" },
+      { key: "jSprite", name: "J" },
+      { key: "vSprite", name: "V" }
+    ];
+
+    function resetGame() {
+      world.running = false;
+      world.gameOver = false;
+      world.time = 0;
+      world.wave = 1;
+      world.nextWaveAt = 18;
+      world.spawnTimer = 0;
+      world.score = 0;
+      world.scrap = 0;
+      world.particles = [];
+      world.bullets = [];
+      world.enemies = [];
+      world.pickups = [];
+
+      player.x = canvas.width / 2;
+      player.y = canvas.height / 2;
+      player.hp = 100;
+      player.shootCooldown = 0;
+      player.flash = 0;
+
+      hpEl.textContent = player.hp;
+      scoreEl.textContent = world.score;
+      waveEl.textContent = world.wave;
+      scrapEl.textContent = world.scrap;
+
+      overlay.classList.remove("hidden");
+      panel.innerHTML = `
+        <h2>Copper 9 Survival</h2>
+        <p>You are Uzi defending the bunker from incoming disassembly drones.</p>
+        <p>Clear waves, dodge attacks, and grab scrap to keep your score climbing.</p>
+        <div class="legend">
+          <div><strong>Move:</strong> WASD or Arrow Keys</div>
+          <div><strong>Aim:</strong> Mouse</div>
+          <div><strong>Shoot:</strong> Left Click</div>
+          <div><strong>Restart:</strong> R</div>
+        </div>
+        <p>Click anywhere in the arena to start.</p>
+      `;
+    }
+
+    function startGame() {
+      if (world.gameOver) {
+        resetGame();
+      }
+      world.running = true;
+      overlay.classList.add("hidden");
+    }
+
+    function spawnEnemy() {
+      const edge = Math.floor(Math.random() * 4);
+      let x = 0;
+      let y = 0;
+
+      if (edge === 0) {
+        x = Math.random() * canvas.width;
+        y = -30;
+      } else if (edge === 1) {
+        x = canvas.width + 30;
+        y = Math.random() * canvas.height;
+      } else if (edge === 2) {
+        x = Math.random() * canvas.width;
+        y = canvas.height + 30;
+      } else {
+        x = -30;
+        y = Math.random() * canvas.height;
+      }
+
+      const fast = Math.random() < Math.min(0.15 + world.wave * 0.03, 0.5);
+      const spriteChoice = enemySprites[Math.floor(Math.random() * enemySprites.length)];
+      world.enemies.push({
+        x,
+        y,
+        r: fast ? 14 : 18,
+        speed: fast ? 170 + world.wave * 6 : 100 + world.wave * 10,
+        hp: fast ? 1 : 2 + Math.floor(world.wave / 3),
+        tint: fast ? "#ff8a65" : "#ff6b6b",
+        damage: fast ? 10 : 16,
+        spriteKey: spriteChoice.key,
+        label: spriteChoice.name
+      });
+    }
+
+    function spawnPickup(x, y) {
+      world.pickups.push({
+        x,
+        y,
+        r: 8,
+        life: 10
+      });
+    }
+
+    function shoot() {
+      if (player.shootCooldown > 0 || !world.running || world.gameOver) {
+        return;
+      }
+
+      const angle = Math.atan2(world.mouse.y - player.y, world.mouse.x - player.x);
+      world.bullets.push({
+        x: player.x + Math.cos(angle) * 24,
+        y: player.y + Math.sin(angle) * 24,
+        vx: Math.cos(angle) * 540,
+        vy: Math.sin(angle) * 540,
+        r: 4,
+        life: 1.1
+      });
+
+      player.shootCooldown = 0.18;
+      player.facing = angle;
+
+      for (let i = 0; i < 6; i += 1) {
+        world.particles.push({
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(angle) * (70 + Math.random() * 90) + (Math.random() - 0.5) * 60,
+          vy: Math.sin(angle) * (70 + Math.random() * 90) + (Math.random() - 0.5) * 60,
+          life: 0.18 + Math.random() * 0.15,
+          color: "#ffd34d"
+        });
+      }
+    }
+
+    function dist(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function damagePlayer(amount) {
+      if (world.gameOver) {
+        return;
+      }
+
+      player.hp = Math.max(0, player.hp - amount);
+      player.flash = 0.3;
+      hpEl.textContent = player.hp;
+
+      if (player.hp <= 0) {
+        world.gameOver = true;
+        world.running = false;
+        overlay.classList.remove("hidden");
+        panel.innerHTML = `
+          <h2>System Failure</h2>
+          <p>You were overwhelmed on wave <strong>${world.wave}</strong>.</p>
+          <p>Final score: <strong>${world.score}</strong> | Scrap collected: <strong>${world.scrap}</strong></p>
+          <p>Press <strong>R</strong> or click the arena to try again.</p>
+        `;
+      }
+    }
+
+    function update(dt) {
+      if (!world.running || world.gameOver) {
+        return;
+      }
+
+      world.time += dt;
+      player.shootCooldown = Math.max(0, player.shootCooldown - dt);
+      player.flash = Math.max(0, player.flash - dt);
+
+      let moveX = 0;
+      let moveY = 0;
+      if (world.keys.has("w") || world.keys.has("arrowup")) moveY -= 1;
+      if (world.keys.has("s") || world.keys.has("arrowdown")) moveY += 1;
+      if (world.keys.has("a") || world.keys.has("arrowleft")) moveX -= 1;
+      if (world.keys.has("d") || world.keys.has("arrowright")) moveX += 1;
+
+      if (moveX !== 0 || moveY !== 0) {
+        const len = Math.hypot(moveX, moveY);
+        moveX /= len;
+        moveY /= len;
+        player.x += moveX * player.speed * dt;
+        player.y += moveY * player.speed * dt;
+      }
+
+      player.x = Math.max(player.r, Math.min(canvas.width - player.r, player.x));
+      player.y = Math.max(player.r, Math.min(canvas.height - player.r, player.y));
+      player.facing = Math.atan2(world.mouse.y - player.y, world.mouse.x - player.x);
+
+      if (world.mouse.down) {
+        shoot();
+      }
+
+      if (world.time >= world.nextWaveAt) {
+        world.wave += 1;
+        world.nextWaveAt += Math.max(10, 18 - world.wave);
+        waveEl.textContent = world.wave;
+      }
+
+      world.spawnTimer -= dt;
+      if (world.spawnTimer <= 0) {
+        spawnEnemy();
+        if (world.wave > 2 && Math.random() < 0.35) {
+          spawnEnemy();
+        }
+        world.spawnTimer = Math.max(0.28, 1.15 - world.wave * 0.07);
+      }
+
+      world.bullets = world.bullets.filter((bullet) => {
+        bullet.x += bullet.vx * dt;
+        bullet.y += bullet.vy * dt;
+        bullet.life -= dt;
+        return bullet.life > 0 &&
+          bullet.x > -20 &&
+          bullet.x < canvas.width + 20 &&
+          bullet.y > -20 &&
+          bullet.y < canvas.height + 20;
+      });
+
+      world.enemies.forEach((enemy) => {
+        const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+        enemy.x += Math.cos(angle) * enemy.speed * dt;
+        enemy.y += Math.sin(angle) * enemy.speed * dt;
+      });
+
+      world.particles = world.particles.filter((particle) => {
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        particle.life -= dt;
+        return particle.life > 0;
+      });
+
+      world.pickups = world.pickups.filter((pickup) => {
+        pickup.life -= dt;
+        if (dist(player, pickup) < player.r + pickup.r + 4) {
+          world.scrap += 1;
+          player.hp = Math.min(100, player.hp + 6);
+          scrapEl.textContent = world.scrap;
+          hpEl.textContent = player.hp;
+          return false;
+        }
+        return pickup.life > 0;
+      });
+
+      for (const enemy of world.enemies) {
+        if (dist(player, enemy) < player.r + enemy.r) {
+          damagePlayer(enemy.damage * dt * 1.8);
+        }
+      }
+
+      for (let i = world.enemies.length - 1; i >= 0; i -= 1) {
+        const enemy = world.enemies[i];
+
+        for (let j = world.bullets.length - 1; j >= 0; j -= 1) {
+          const bullet = world.bullets[j];
+          if (dist(enemy, bullet) < enemy.r + bullet.r) {
+            enemy.hp -= 1;
+            world.bullets.splice(j, 1);
+
+            for (let k = 0; k < 8; k += 1) {
+              world.particles.push({
+                x: enemy.x,
+                y: enemy.y,
+                vx: (Math.random() - 0.5) * 180,
+                vy: (Math.random() - 0.5) * 180,
+                life: 0.3 + Math.random() * 0.25,
+                color: enemy.tint
+              });
+            }
+
+            if (enemy.hp <= 0) {
+              world.enemies.splice(i, 1);
+              world.score += 10 + world.wave * 2;
+              scoreEl.textContent = world.score;
+              if (Math.random() < 0.34) {
+                spawnPickup(enemy.x, enemy.y);
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    function drawGrid() {
+      ctx.save();
+      ctx.strokeStyle = "rgba(68, 106, 133, 0.15)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawArenaArt() {
+      ctx.save();
+
+      if (textures.nori.complete) {
+        ctx.globalAlpha = 0.12;
+        ctx.drawImage(textures.nori, 22, 52, 132, 198);
+      }
+
+      if (textures.yeva.complete) {
+        ctx.globalAlpha = 0.12;
+        ctx.drawImage(textures.yeva, canvas.width - 154, 52, 132, 198);
+      }
+
+      ctx.globalAlpha = 1;
+
+      if (textures.wdSymbol.complete) {
+        ctx.globalAlpha = 0.18;
+        ctx.drawImage(textures.wdSymbol, canvas.width / 2 - 122, canvas.height / 2 - 122, 78, 78);
+        ctx.drawImage(textures.wdSymbol, canvas.width / 2 + 44, canvas.height / 2 - 122, 78, 78);
+      }
+
+      if (textures.ddSymbol.complete) {
+        ctx.globalAlpha = 0.14;
+        ctx.drawImage(textures.ddSymbol, canvas.width / 2 - 122, canvas.height / 2 + 44, 78, 78);
+        ctx.drawImage(textures.ddSymbol, canvas.width / 2 + 44, canvas.height / 2 + 44, 78, 78);
+      }
+
+      const bannerY = 16 + Math.sin(world.time * 1.4) * 3;
+      ctx.globalAlpha = 0.16;
+      if (textures.armbandN.complete) {
+        ctx.drawImage(textures.armbandN, 160, bannerY, 180, 58);
+      }
+      if (textures.armbandJ.complete) {
+        ctx.drawImage(textures.armbandJ, 360, bannerY, 180, 58);
+      }
+      if (textures.armbandV.complete) {
+        ctx.drawImage(textures.armbandV, 560, bannerY, 180, 58);
+      }
+
+      ctx.restore();
+    }
+
+    function drawPlayer() {
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.facing);
+
+      if (textures.uziSprite.complete && textures.uziSprite.naturalWidth > 0) {
+        ctx.save();
+        ctx.translate(0, 5);
+        ctx.drawImage(textures.uziSprite, -34, -34, 68, 68);
+        if (player.flash > 0) {
+          ctx.fillStyle = "rgba(255, 208, 208, 0.35)";
+          ctx.beginPath();
+          ctx.arc(0, 0, 26, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      ctx.fillStyle = player.flash > 0 ? "#ffd0d0" : "#dfe8f2";
+      ctx.beginPath();
+      ctx.roundRect(-16, -14, 32, 28, 8);
+      ctx.fill();
+
+      ctx.fillStyle = "#101923";
+      ctx.fillRect(-10, -7, 20, 14);
+      ctx.fillStyle = "#ffd34d";
+      ctx.fillRect(-8, -5, 16, 10);
+
+      if (textures.uziJacket.complete) {
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.drawImage(textures.uziJacket, -15, -13, 30, 26);
+        ctx.restore();
+      }
+
+      ctx.fillStyle = "#8597aa";
+      ctx.fillRect(10, -3, 18, 6);
+
+      ctx.restore();
+    }
+
+    function drawEnemy(enemy) {
+      ctx.save();
+      ctx.translate(enemy.x, enemy.y);
+      const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+      ctx.rotate(angle);
+
+      if (textures[enemy.spriteKey]?.complete && textures[enemy.spriteKey].naturalWidth > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.92;
+        ctx.drawImage(textures[enemy.spriteKey], -32, -32, 64, 64);
+        ctx.restore();
+      }
+
+      ctx.fillStyle = enemy.tint;
+      ctx.beginPath();
+      ctx.roundRect(-enemy.r, -enemy.r + 2, enemy.r * 2, enemy.r * 2 - 4, 7);
+      ctx.fill();
+
+      ctx.fillStyle = "#120c10";
+      ctx.fillRect(-enemy.r + 5, -5, enemy.r * 2 - 10, 10);
+      ctx.fillStyle = "#fff2c1";
+      ctx.fillRect(-enemy.r + 7, -3, enemy.r * 2 - 14, 6);
+
+      ctx.rotate(-angle);
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      ctx.font = "11px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.fillText(enemy.label, 0, enemy.r + 14);
+
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bg.addColorStop(0, "#13202b");
+      bg.addColorStop(1, "#080d12");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      drawGrid();
+      drawArenaArt();
+
+      ctx.fillStyle = "rgba(255, 211, 77, 0.08)";
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, 92, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255, 211, 77, 0.3)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(canvas.width / 2 - 42, canvas.height / 2 - 42, 84, 84);
+
+      world.pickups.forEach((pickup) => {
+        ctx.fillStyle = "#ffd34d";
+        ctx.beginPath();
+        ctx.arc(pickup.x, pickup.y, pickup.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      world.bullets.forEach((bullet) => {
+        ctx.fillStyle = "#ffe89a";
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, bullet.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      world.enemies.forEach(drawEnemy);
+      drawPlayer();
+
+      world.particles.forEach((particle) => {
+        ctx.globalAlpha = Math.max(0, particle.life * 2.4);
+        ctx.fillStyle = particle.color;
+        ctx.fillRect(particle.x, particle.y, 3, 3);
+        ctx.globalAlpha = 1;
+      });
+
+      if (!world.running && !world.gameOver) {
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.font = "18px Trebuchet MS";
+        ctx.textAlign = "center";
+        ctx.fillText("Click to deploy Uzi", canvas.width / 2, canvas.height - 24);
+      }
+    }
+
+    let last = performance.now();
+    function frame(now) {
+      const dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(frame);
+    }
+
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      world.keys.add(key);
+
+      if (key === "r") {
+        resetGame();
+        startGame();
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      world.keys.delete(event.key.toLowerCase());
+    });
+
+    canvas.addEventListener("mousemove", (event) => {
+      const rect = canvas.getBoundingClientRect();
+      world.mouse.x = (event.clientX - rect.left) * (canvas.width / rect.width);
+      world.mouse.y = (event.clientY - rect.top) * (canvas.height / rect.height);
+    });
+
+    canvas.addEventListener("mousedown", () => {
+      world.mouse.down = true;
+      if (!world.running) {
+        startGame();
+      } else {
+        shoot();
+      }
+    });
+
+    window.addEventListener("mouseup", () => {
+      world.mouse.down = false;
+    });
+
+    resetGame();
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

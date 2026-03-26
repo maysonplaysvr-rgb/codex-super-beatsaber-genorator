@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beat Saber Mod Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="beat-saber-generator.css">
+</head>
+<body>
+  <main class="shell">
+    <nav class="top-nav">
+      <a class="nav-link" href="mod-generator-home.html">Hub</a>
+      <span class="nav-link current">Beat Saber Generator</span>
+      <a class="nav-link" href="beat-saber-lightshow-fixer.html">Lightshow Fixer</a>
+      <a class="nav-link" href="bonelab-generator.html">Bonelab Generator</a>
+    </nav>
+
+    <section class="hero">
+      <p class="eyebrow">Standalone builder</p>
+      <h1>Beat Saber Mod Generator</h1>
+      <p class="lede">
+        Drop in a song, pick a vibe, and generate a playable custom map pack without touching the separate preview page.
+      </p>
+      <div class="hero-chips">
+        <span class="hero-chip">Cleaner flow</span>
+        <span class="hero-chip">Lattice showcase</span>
+        <span class="hero-chip">Clear mod warnings</span>
+      </div>
+      <p class="page-note"><strong>Works now:</strong> vanilla-safe packs, lightshows, arcs, chains, editor mode, zip export.</p>
+      <p class="page-note"><strong>Needs mods for the best version:</strong> use <strong>1.37 Modded</strong> with Chroma, Noodle Extensions, and Mapping Extensions.</p>
+      <p class="page-note"><strong>1.37 fallback:</strong> newer styles like <strong>Weave</strong> and <strong>EDM</strong> can export onto older in-game environments so they still show in Beat Saber 1.37.</p>
+      <p class="page-note"><strong>Lattice:</strong> currently experimental and may still be broken in-game.</p>
+    </section>
+
+    <section class="layout">
+      <form id="generator-form" class="panel form-panel">
+        <div class="field-grid">
+          <label class="field field-wide">
+            <span>Song file</span>
+            <input id="audio-file" type="file" accept=".ogg,audio/ogg" required>
+          </label>
+
+          <label class="field">
+            <span>Song title</span>
+            <input id="song-name" type="text" placeholder="Monster">
+          </label>
+
+          <label class="field">
+            <span>Song author</span>
+            <input id="song-author" type="text" placeholder="Skillet">
+          </label>
+
+          <label class="field">
+            <span>Level author</span>
+            <input id="level-author" type="text" placeholder="brian">
+          </label>
+
+          <label class="field">
+            <span>BPM</span>
+            <input id="bpm" type="number" min="60" max="260" step="1" placeholder="140">
+          </label>
+
+          <label class="field">
+            <span>Difficulty</span>
+            <select id="difficulty">
+              <option>Easy</option>
+              <option>Normal</option>
+              <option>Hard</option>
+              <option selected>Expert</option>
+              <option>ExpertPlus</option>
+              <option>Impossible</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Environment</span>
+            <select id="environment"></select>
+          </label>
+
+          <label class="field">
+            <span>Style mode</span>
+            <select id="mapper-mode">
+              <option value="safe">Safe</option>
+              <option value="modded">Modded</option>
+              <option value="modded-137">1.37 Modded (Quest/legacy mod setup)</option>
+              <option value="custom-platforms">Custom Platforms</option>
+              <option value="weave-me">Chaos</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Gameplay density</span>
+            <select id="gameplay-density">
+              <option value="low">Low</option>
+              <option value="normal" selected>Normal</option>
+              <option value="high">High</option>
+              <option value="insane">Insane</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Lightshow intensity</span>
+            <select id="lightshow-intensity">
+              <option value="subtle">Subtle</option>
+              <option value="show" selected>Show</option>
+              <option value="big">Big</option>
+              <option value="chaos">Chaos</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Rainbow mode</span>
+            <select id="rainbow-mode">
+              <option value="off" selected>Off</option>
+              <option value="on">Chroma rainbow</option>
+            </select>
+          </label>
+
+          <p class="inline-tip">Tip: if you want a cool lightshow or rainbow environment colors, use <strong>1.37 Modded</strong> mode.</p>
+          <p class="inline-tip">On <strong>1.37 Modded</strong>, some newer environment styles use a fallback base environment so they do not go black in-game.</p>
+
+          <label class="field field-wide">
+            <span>Prompt</span>
+            <textarea id="prompt" rows="4" placeholder="fast metal stream map with dramatic bursts and some arcs"></textarea>
+          </label>
+
+          <label class="field">
+            <span>Quick preset</span>
+            <select id="quick-preset">
+              <option value="">Choose a preset</option>
+              <option value="featured">Featured Showcase</option>
+              <option value="dragon">DragonForce Rush</option>
+              <option value="golden">Golden Hour Glow</option>
+              <option value="cinematic">Cinematic Weave</option>
+              <option value="edm">EDM Blast</option>
+              <option value="gimmick">Spin Gimmick</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <label class="toggle"><input id="use-peaks" type="checkbox" checked> <span>Boost dense sections</span></label>
+          <label class="toggle"><input id="add-bombs" type="checkbox"> <span>Add bombs</span></label>
+          <label class="toggle"><input id="add-arcs" type="checkbox" checked> <span>Add arcs</span></label>
+          <label class="toggle"><input id="add-lights" type="checkbox" checked> <span>Add light events</span></label>
+        </div>
+
+        <div class="action-row">
+          <button id="generate-button" type="submit">Generate pack</button>
+          <button id="randomize-button" type="button">Randomize</button>
+          <button id="editor-button" type="button">Editor</button>
+          <button id="download-button" type="button" disabled>Download pack files</button>
+          <a id="upload-button" class="action-link" href="https://beatsaver.com/" target="_blank" rel="noreferrer">Open BeatSaver (+ Upload)</a>
+        </div>
+
+        <p id="status-line" class="status">Load a song to start.</p>
+        <p class="inline-tip">BeatSaver upload currently opens from the <strong>+</strong> menu on the BeatSaver site.</p>
+
+        <section class="finder-panel">
+          <div class="editor-head">
+            <h2>Song finder</h2>
+            <button id="finder-clear-button" type="button" class="editor-mini">Clear</button>
+          </div>
+
+          <div class="finder-row">
+            <label class="field field-wide">
+              <span>Search YouTube Music in-app</span>
+              <input id="finder-query" type="text" placeholder="DragonForce Power of the Saber Blade">
+            </label>
+          </div>
+
+          <div class="action-row editor-actions">
+            <button id="finder-search-button" type="button" class="editor-primary">Search song</button>
+            <a id="finder-fallback-link" class="finder-link" href="https://music.youtube.com/" target="_blank" rel="noreferrer">Open YouTube Music</a>
+            <a id="finder-youtube-link" class="finder-link" href="https://www.youtube.com/" target="_blank" rel="noreferrer">Open YouTube</a>
+            <a id="finder-beatsaver-link" class="finder-link" href="https://beatsaver.com/" target="_blank" rel="noreferrer">Search BeatSaver</a>
+          </div>
+
+          <p id="finder-status" class="status finder-status">Search here if you do not already have a song file.</p>
+
+          <div id="finder-results" class="finder-results" hidden>
+            <div class="summary-line"><span>Query</span><strong id="finder-query-preview">waiting</strong></div>
+            <div class="summary-line"><span>Note</span><strong>YouTube Music blocks in-page embeds</strong></div>
+            <div class="summary-line"><span>Tip</span><strong>Use the query above in YouTube, YT Music, or BeatSaver</strong></div>
+          </div>
+        </section>
+
+        <section id="editor-panel" class="editor-panel" hidden>
+          <div class="editor-head">
+            <h2>Manual editor</h2>
+            <button id="editor-reset-button" type="button" class="editor-mini">Reset editor</button>
+          </div>
+
+          <div class="editor-grid">
+            <label class="field">
+              <span>Object type</span>
+              <select id="editor-object-type">
+                <option value="note">Note</option>
+                <option value="bomb">Bomb</option>
+                <option value="arc">Arc</option>
+                <option value="chain">Chain</option>
+                <option value="light">Light</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Beat</span>
+              <input id="editor-beat" type="number" min="0" step="0.125" value="4">
+            </label>
+
+            <label class="field">
+              <span>Color / light</span>
+              <select id="editor-color">
+                <option value="0">Left / blue</option>
+                <option value="1">Right / red</option>
+                <option value="5">Warm / red light</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Lane</span>
+              <input id="editor-lane" type="number" min="0" max="3" step="1" value="1">
+            </label>
+
+            <label class="field">
+              <span>Row</span>
+              <input id="editor-row" type="number" min="0" max="2" step="1" value="1">
+            </label>
+
+            <label class="field">
+              <span>Direction / event type</span>
+              <input id="editor-direction" type="number" min="0" max="9" step="1" value="1">
+            </label>
+
+            <label class="field">
+              <span>Tail beat</span>
+              <input id="editor-tail-beat" type="number" min="0" step="0.125" value="4.5">
+            </label>
+
+            <label class="field">
+              <span>Tail lane</span>
+              <input id="editor-tail-lane" type="number" min="0" max="3" step="1" value="2">
+            </label>
+
+            <label class="field">
+              <span>Tail row</span>
+              <input id="editor-tail-row" type="number" min="0" max="2" step="1" value="1">
+            </label>
+
+            <label class="field">
+              <span>Slices / strength</span>
+              <input id="editor-strength" type="number" min="1" max="12" step="1" value="5">
+            </label>
+          </div>
+
+          <div class="action-row editor-actions">
+            <button id="editor-add-button" type="button" class="editor-primary">Add object</button>
+            <button id="editor-build-button" type="button" class="editor-secondary">Build pack from editor</button>
+          </div>
+
+          <div id="editor-stats" class="editor-stats"></div>
+
+          <label class="field field-wide">
+            <span>Editor JSON</span>
+            <textarea id="editor-json" rows="14" spellcheck="false"></textarea>
+          </label>
+        </section>
+      </form>
+
+      <section class="panel side-panel">
+        <div class="cover-wrap">
+          <canvas id="cover-canvas" width="256" height="256" aria-label="generated cover art preview"></canvas>
+        </div>
+
+        <div class="summary-block">
+          <h2>Browser preview</h2>
+          <div class="preview-wrap">
+            <canvas id="map-preview-canvas" width="320" height="540" aria-label="environment and map preview"></canvas>
+          </div>
+          <p class="preview-note">Shows a web-safe environment preview for Default and Big Mirror, with notes layered on top.</p>
+          <div class="action-row preview-actions">
+            <button id="preview-button" type="button">Preview map</button>
+          </div>
+        </div>
+
+        <div class="summary-block">
+          <h2>Pack summary</h2>
+          <div id="summary" class="summary-list"></div>
+        </div>
+
+        <div class="summary-block">
+          <h2>Warnings</h2>
+          <div id="warnings" class="warning-list">
+            <div class="warning-line neutral"><span>ready</span><strong>waiting for a pack</strong></div>
+          </div>
+        </div>
+
+        <div class="summary-block">
+          <h2>Downloads</h2>
+          <div id="downloads" class="download-list">
+            <div class="summary-line"><span>Info.dat</span><span>waiting</span></div>
+            <div class="summary-line"><span>Difficulty file</span><span>waiting</span></div>
+            <div class="summary-line"><span>Cover</span><span>waiting</span></div>
+            <div class="summary-line"><span>Song</span><span>waiting</span></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="beat-saber-generator.js"></script>
+</body>
+</html>
