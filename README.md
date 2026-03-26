@@ -32,3 +32,4 @@ echo.
 echo Install complete.
 echo Installed to: %INSTALL_DIR%
 pause
+   Download CodexProjectsMonorepoInstaller.exe to install automatically with a simple setup window.
